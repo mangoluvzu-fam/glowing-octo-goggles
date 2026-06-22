@@ -1,4 +1,4 @@
----
+uni---
 
 ## 🚀 Quick Start
 
@@ -116,3 +116,106 @@ class GroverSearch:
                     rotation_matrix[i, j] += sin_half * sign * 1j
         
         return rotation_matrix @ state
+"""
+Wolfram Rule 110 Implementation
+Turing-complete cellular automaton bound to Golden Ratio
+TOE-2026-06-16-S25-OCTONION
+"""
+
+import numpy as np
+
+class Rule110:
+    """Wolfram Rule 110 cellular automaton"""
+    
+    def __init__(self, width=100, golden_ratio_lock=True):
+        """
+        Initialize Rule 110 automaton
+        
+        Args:
+            width: Width of the cellular automaton
+            golden_ratio_lock: Whether to lock generations to Golden Ratio
+        """
+        self.width = width
+        self.phi = (1 + np.sqrt(5)) / 2
+        self.golden_ratio_lock = golden_ratio_lock
+        
+        # Rule 110 binary table
+        self.rule_table = {
+            (1,1,1): 0,
+            (1,1,0): 1,
+            (1,0,1): 1,
+            (1,0,0): 0,
+            (0,1,1): 1,
+            (0,1,0): 1,
+            (0,0,1): 1,
+            (0,0,0): 0
+        }
+    
+    def apply_rule(self, left, center, right):
+        """Apply Rule 110 to three cells"""
+        return self.rule_table[(left, center, right)]
+    
+    def generate_fractal_mask(self, generations=None, seed=1):
+        """
+        Generate fractal mask using Rule 110
+        
+        Args:
+            generations: Number of generations (if None, use Golden Ratio)
+            seed: Initial seed (single cell or array)
+        """
+        if generations is None and self.golden_ratio_lock:
+            # Use Golden Ratio to determine generations
+            generations = int(self.phi ** 3)  # ~4.236^3 ≈ 76
+            print(f"🔄 Using Golden Ratio-locked generations: {generations}")
+        
+        # Initialize grid
+        grid = np.zeros((generations, self.width), dtype=int)
+        
+        # Set initial seed
+        if isinstance(seed, int):
+            grid[0, self.width // 2] = 1
+        else:
+            grid[0, :len(seed)] = seed
+        
+        # Evolve using Rule 110
+        for gen in range(1, generations):
+            for col in range(self.width):
+                left = grid[gen-1, (col-1) % self.width]
+                center = grid[gen-1, col]
+                right = grid[gen-1, (col+1) % self.width]
+                grid[gen, col] = self.apply_rule(left, center, right)
+        
+        return grid
+    
+    def extract_phase_mask(self, grid):
+        """Extract phase mask from Rule 110 grid"""
+        # Convert grid to phase values
+        phase_mask = grid.astype(float)
+        
+        # Apply Golden Ratio scaling
+        phase_mask = phase_mask * (2 * np.pi / self.phi)
+        
+        return phase_mask
+    
+    def generate_golden_fractal(self, depth=10):
+        """
+        Generate fractal mask with Golden Ratio scaling at multiple scales
+        """
+        masks = []
+        for scale in range(1, depth + 1):
+            generations = int(self.phi ** scale)
+            grid = self.generate_fractal_mask(generations=generations)
+            phase_mask = self.extract_phase_mask(grid)
+            masks.append(phase_mask)
+        
+        # Combine masks at different scales
+        combined = np.zeros_like(masks[0])
+        for mask in masks:
+            # Resize to match first mask
+            if mask.shape != combined.shape:
+                from scipy.ndimage import zoom
+                zoom_factor = combined.shape[0] / mask.shape[0]
+                mask = zoom(mask, zoom_factor, order=0)
+            combined += mask
+        
+        return combined / len(masks)
