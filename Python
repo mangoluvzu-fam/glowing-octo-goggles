@@ -1,1 +1,24 @@
+---
 
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.9+
+- NumPy 1.21+
+- SciPy 1.7+
+- Matplotlib 3.4+
+- Jupyter Notebook (for exploration)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/mangoluvzu.fam/TOE-2026-06-16-S25-OCTONION.git
+cd TOE-2026-06-16-S25-OCTONION
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install in development mode
+python setup.py develop
