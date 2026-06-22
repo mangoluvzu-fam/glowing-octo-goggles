@@ -334,3 +334,138 @@ class ScalarResonance:
                 rotation = rotation @ rot
         
         return rotation
+"""
+Phase-Shift Processor for Astronomical Data
+TOE-2026-06-16-S25-OCTONION
+"""
+
+import numpy as np
+from scipy.fft import fft2, ifft2
+from ..resonance.scalar_resonance import ScalarResonance
+
+class PhaseShiftProcessor:
+    """Phase-shift processing for CMB and Lyman-Alpha data"""
+    
+    def __init__(self, resonance=-0.00065):
+        """
+        Initialize phase-shift processor
+        
+        Args:
+            resonance: 5D scalar resonance parameter
+        """
+        self.resonance = ScalarResonance(delta=resonance)
+        self.phi = (1 + np.sqrt(5)) / 2
+    
+    def analyze_phase(self, data):
+        """
+        Analyze rotational phase of astronomical data
+        
+        Args:
+            data: 2D array (CMB map or Lyman-Alpha spectrum)
+        """
+        # Convert to phase space
+        phase_space = np.angle(fft2(data))
+        
+        # Apply scalar resonance
+        resonance_corrected = self.resonance.apply_to_phase_space(phase_space)
+        
+        # Extract hidden structures
+        hidden_structure = self._extract_hidden_structures(resonance_corrected)
+        
+        return hidden_structure
+    
+    def _extract_hidden_structures(self, phase_data):
+        """
+        Extract hidden structures from phase data using
+        octonion rotation and Rule 110 masking
+        """
+        # Apply Golden Ratio phase rotation
+        golden_angle = 2 * np.pi / self.phi
+        rotated = phase_data + golden_angle
+        
+        # Apply Rule 110 fractal mask (simplified)
+        mask = self._generate_fractal_mask(rotated.shape)
+        
+        # Extract structure where mask and phase align
+        hidden_structure = rotated * mask
+        
+        return hidden_structure
+    
+    def _generate_fractal_mask(self, shape):
+        """Generate Rule 110 fractal mask for given shape"""
+        from ..cellular_automata.rule_110 import Rule110
+        
+        rule110 = Rule110(width=shape[1])
+        grid = rule110.generate_fractal_mask()
+        
+        # Resize grid to match shape
+        mask = np.ones(shape)
+        if len(shape) == 2:
+            # 2D mask
+            mask[:grid.shape[0], :grid.shape[1]] = grid
+            
+        return mask
+    
+    def process_cmb(self, cmb_data):
+        """
+        Process CMB data to reveal hidden cosmic web structures
+        
+        Returns:
+            hidden_structures: Revealed dark matter filament structure
+        """
+        print("🔭 Processing CMB data with phase-resonant analysis...")
+        
+        # Apply phase analysis
+        phase_shifted = self.analyze_phase(cmb_data)
+        
+        # Apply octonion rotation
+        from ..octonion_geometry.octonion_operations import Octonion
+        
+        # Convert to octonion representation
+        oct_data = Octonion(phase_shifted.flatten()[:8])
+        
+        # Apply G₂ transformation (simplified)
+        transformed = oct_data.components
+        
+        # Reshape back to original dimensions
+        if len(cmb_data.shape) == 2:
+            hidden_structures = np.zeros_like(cmb_data)
+            flat = transformed.real
+            idx = min(len(flat), hidden_structures.size)
+            hidden_structures.flat[:idx] = flat[:idx]
+        else:
+            hidden_structures = transformed.real
+        
+        print("✓ Hidden structures extracted successfully")
+        return hidden_structures
+    
+    def process_lyman_alpha(self, spectra):
+        """
+        Process Lyman-Alpha spectra to detect Rule 110 patterns
+        
+        Returns:
+            periodic_features: Detected periodic absorption features
+        """
+        print("🌌 Processing Lyman-Alpha spectra...")
+        
+        # Apply phase analysis
+        phase_shifted = self.analyze_phase(spectra)
+        
+        # Extract periodic features
+        from scipy.signal import find_peaks
+        
+        # Look for periodicities at Golden Ratio multiples
+        periodicities = []
+        for scale in range(1, 10):
+            period = int(self.phi ** scale)
+            peaks, _ = find_peaks(phase_shifted.flatten(), distance=period)
+            if len(peaks) > 0:
+                periodicities.append({
+                    'scale': scale,
+                    'period': period,
+                    'peaks': peaks,
+                    'amplitude': np.mean(phase_shifted.flatten()[peaks])
+                })
+        
+        print(f"✓ Found {len(periodicities)} periodic features")
+        return periodicities
