@@ -22,3 +22,97 @@ pip install -r requirements.txt
 
 # Install in development mode
 python setup.py develop
+"""
+Grover's Quantum Search Algorithm Implementation
+TOE-2026-06-16-S25-OCTONION
+"""
+
+import numpy as np
+from ..octonion_geometry.octonion_operations import Octonion
+
+class GroverSearch:
+    """Grover's search algorithm on octonion Hilbert space"""
+    
+    def __init__(self, n_qubits=3):
+        """
+        Initialize Grover search for n_qubits (8-dimensional space)
+        """
+        self.n_qubits = n_qubits
+        self.n_states = 2 ** n_qubits  # = 8 for octonions
+        self.phi = (1 + np.sqrt(5)) / 2  # Golden Ratio
+        
+    def create_superposition(self):
+        """Create equal superposition state |s>"""
+        state = np.ones(self.n_states, dtype=complex) / np.sqrt(self.n_states)
+        return state
+    
+    def oracle(self, target_index):
+        """Oracle that marks the target state"""
+        oracle_matrix = np.eye(self.n_states, dtype=complex)
+        oracle_matrix[target_index, target_index] = -1
+        return oracle_matrix
+    
+    def diffusion_operator(self):
+        """Grover diffusion operator D = 2|s><s| - I"""
+        s = self.create_superposition()
+        D = 2 * np.outer(s, s.conjugate()) - np.eye(self.n_states, dtype=complex)
+        return D
+    
+    def grover_iteration(self, target_index):
+        """One Grover iteration: G = D * O"""
+        O = self.oracle(target_index)
+        D = self.diffusion_operator()
+        return D @ O
+    
+    def search(self, target_index, iterations=None):
+        """
+        Perform Grover search for target_index
+        
+        Optimal iterations ≈ (π/4) * sqrt(N)
+        """
+        if iterations is None:
+            iterations = int(np.pi / 4 * np.sqrt(self.n_states))
+        
+        state = self.create_superposition()
+        G = self.grover_iteration(target_index)
+        
+        for _ in range(iterations):
+            state = G @ state
+        
+        return state
+    
+    def measure(self, state):
+        """Measure the state and return probability distribution"""
+        probabilities = np.abs(state) ** 2
+        return probabilities / np.sum(probabilities)
+    
+    def apply_octonion_rotation(self, state, theta=None):
+        """
+        Apply octonion Fanon plane rotation to Grover state
+        Locked to Golden Ratio if theta is None
+        """
+        if theta is None:
+            theta = 2 * np.pi / self.phi  # Golden angle
+        
+        # Convert to octonion representation
+        oct_state = Octonion(state[:8])
+        
+        # Apply rotation in Fanon plane
+        # R(θ) = cos(θ/2) * I + sin(θ/2) * U
+        cos_half = np.cos(theta / 2)
+        sin_half = np.sin(theta / 2)
+        
+        # Construct rotation matrix
+        n = self.n_states
+        rotation_matrix = cos_half * np.eye(n, dtype=complex)
+        
+        # Add off-diagonal elements for octonion structure
+        for i in range(1, n):
+            for j in range(1, n):
+                if i != j:
+                    # Use octonion multiplication table for rotation
+                    k = oct_state._fano_plane(i, j)
+                    sign = oct_state._fano_sign(i, j)
+                    rotation_matrix[i, j] += sin_half * sign * 1j
+        
+        return rotation_matrix @ state
