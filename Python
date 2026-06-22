@@ -469,3 +469,49 @@ class PhaseShiftProcessor:
         
         print(f"✓ Found {len(periodicities)} periodic features")
         return periodicities
+"""
+Unit Tests for Octonion Operations
+TOE-2026-06-16-S25-OCTONION
+"""
+
+import pytest
+import numpy as np
+from src.octonion_geometry.octonion_operations import Octonion
+
+class TestOctonionOperations:
+    
+    def test_basis_creation(self):
+        """Test octonion basis creation"""
+        e0, e1, e2, e3, e4, e5, e6, e7 = Octonion.basis()
+        assert len(Octonion.basis()) == 8
+        assert np.allclose(e0.components, [1, 0, 0, 0, 0, 0, 0, 0])
+        assert np.allclose(e1.components, [0, 1, 0, 0, 0, 0, 0, 0])
+    
+    def test_octonion_addition(self):
+        """Test octonion addition"""
+        a = Octonion([1, 2, 3, 4, 5, 6, 7, 8])
+        b = Octonion([8, 7, 6, 5, 4, 3, 2, 1])
+        c = a + b
+        assert np.allclose(c.components, [9, 9, 9, 9, 9, 9, 9, 9])
+    
+    def test_octonion_multiplication(self):
+        """Test octonion multiplication"""
+        e0, e1, e2, _ = Octonion.basis()[:3]
+        # e1 * e2 = e3
+        result = e1 * e2
+        assert np.allclose(result.components[3], 1)
+    
+    def test_conjugate(self):
+        """Test octonion conjugate"""
+        o = Octonion([1, 2, 3, 4, 5, 6, 7, 8])
+        conj = o.conjugate()
+        assert np.allclose(conj.components[0], 1)  # Real part unchanged
+        assert np.allclose(conj.components[1:], -np.array([2, 3, 4, 5, 6, 7, 8]))
+    
+    def test_norm(self):
+        """Test octonion norm"""
+        o = Octonion([1, 0, 0, 0, 0, 0, 0, 0])
+        assert np.isclose(o.norm(), 1)
+        
+        o = Octonion([1, 1, 0, 0, 0, 0, 0, 0])
+        assert np.isclose(o.norm(), 2)
